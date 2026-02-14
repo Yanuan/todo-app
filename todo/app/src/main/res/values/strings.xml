@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">待办事项提醒</string>
+    <string name="channel_name">待办事项提醒</string>
+    <string name="channel_description">待办事项提醒通知</string>
+</resources>

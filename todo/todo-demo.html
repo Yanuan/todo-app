@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>待办事项提醒应用 - 演示</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .phone-container {
+            width: 375px;
+            height: 812px;
+            background: #fff;
+            border-radius: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .phone-notch {
+            width: 150px;
+            height: 30px;
+            background: #000;
+            border-radius: 0 0 20px 20px;
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 100;
+        }
+
+        .app-header {
+            background: #6200EE;
+            color: white;
+            padding: 50px 20px 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .app-header h1 {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .todo-list {
+            padding: 20px;
+            height: calc(100% - 180px);
+            overflow-y: auto;
+        }
+
+        .todo-item {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e0e0e0;
+            transition: all 0.3s ease;
+        }
+
+        .todo-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .todo-item.disabled {
+            opacity: 0.6;
+            background: #f5f5f5;
+        }
+
+        .todo-header {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 8px;
+        }
+
+        .todo-checkbox {
+            width: 24px;
+            height: 24px;
+            border: 2px solid #6200EE;
+            border-radius: 50%;
+            margin-right: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .todo-checkbox.checked {
+            background: #6200EE;
+        }
+
+        .todo-checkbox.checked::after {
+            content: '✓';
+            color: white;
+            font-size: 14px;
+        }
+
+        .todo-content {
+            flex: 1;
+        }
+
+        .todo-title {
+            font-weight: 600;
+            font-size: 16px;
+            color: #333;
+            margin-bottom: 4px;
+        }
+
+        .todo-description {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+
+        .todo-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            color: #6200EE;
+        }
+
+        .todo-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .todo-action-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+
+        .todo-action-btn:hover {
+            background: #f0f0f0;
+        }
+
+        .fab {
+            position: absolute;
+            bottom: 30px;
+            right: 30px;
+            width: 56px;
+            height: 56px;
+            background: #6200EE;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 32px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(98, 0, 238, 0.4);
+            transition: all 0.3s ease;
+            border: none;
+        }
+
+        .fab:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 16px rgba(98, 0, 238, 0.5);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 24px;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #333;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #6200EE;
+        }
+
+        .form-textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        .form-select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            background: white;
+            cursor: pointer;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .btn {
+            padding: 10px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+        }
+
+        .btn-cancel {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .btn-cancel:hover {
+            background: #e0e0e0;
+        }
+
+        .btn-save {
+            background: #6200EE;
+            color: white;
+        }
+
+        .btn-save:hover {
+            background: #5000d6;
+        }
+
+        .btn-save:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .day-selector {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .day-chip {
+            padding: 8px 4px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 12px;
+        }
+
+        .day-chip:hover {
+            background: #f0f0f0;
+        }
+
+        .day-chip.selected {
+            background: #6200EE;
+            color: white;
+            border-color: #6200EE;
+        }
+
+        .day-chip.hidden {
+            display: none;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .empty-state-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+        }
+
+        .empty-state-text {
+            font-size: 16px;
+            line-height: 1.6;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #4CAF50;
+            color: white;
+            padding: 16px 24px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+            z-index: 1001;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification-title {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .notification-message {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+    </style>
+</head>
+<body>
+    <div class="phone-container">
+        <div class="phone-notch"></div>
+        
+        <div class="app-header">
+            <h1>待办事项提醒</h1>
+        </div>
+
+        <div class="todo-list" id="todoList">
+            <!-- 待办事项将在这里动态生成 -->
+        </div>
+
+        <button class="fab" onclick="showAddModal()">+</button>
+    </div>
+
+    <!-- 添加/编辑模态框 -->
+    <div class="modal" id="todoModal">
+        <div class="modal-content">
+            <h2 class="modal-title" id="modalTitle">添加待办事项</h2>
+            
+            <div class="form-group">
+                <label class="form-label">标题 *</label>
+                <input type="text" class="form-input" id="todoTitle" placeholder="输入待办事项标题">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">描述（可选）</label>
+                <textarea class="form-input form-textarea" id="todoDescription" placeholder="输入描述"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">提醒时间</label>
+                <input type="time" class="form-input" id="todoTime" value="09:00">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">重复周期</label>
+                <select class="form-select" id="todoCycle" onchange="onCycleChange()">
+                    <option value="NONE">仅一次</option>
+                    <option value="DAILY">每天</option>
+                    <option value="WEEKLY">每周</option>
+                    <option value="MONTHLY">每月</option>
+                </select>
+            </div>
+
+            <div class="form-group" id="dayOfWeekGroup" style="display: none;">
+                <label class="form-label">重复星期</label>
+                <div class="day-selector" id="dayOfWeekSelector">
+                    <div class="day-chip" data-day="1" onclick="selectDayOfWeek(1)">一</div>
+                    <div class="day-chip" data-day="2" onclick="selectDayOfWeek(2)">二</div>
+                    <div class="day-chip" data-day="3" onclick="selectDayOfWeek(3)">三</div>
+                    <div class="day-chip" data-day="4" onclick="selectDayOfWeek(4)">四</div>
+                    <div class="day-chip" data-day="5" onclick="selectDayOfWeek(5)">五</div>
+                    <div class="day-chip" data-day="6" onclick="selectDayOfWeek(6)">六</div>
+                    <div class="day-chip" data-day="7" onclick="selectDayOfWeek(7)">日</div>
+                </div>
+            </div>
+
+            <div class="form-group" id="dayOfMonthGroup" style="display: none;">
+                <label class="form-label">重复日期</label>
+                <div class="day-selector" id="dayOfMonthSelector">
+                </div>
+            </div>
+
+            <div class="modal-actions">
+                <button class="btn btn-cancel" onclick="hideModal()">取消</button>
+                <button class="btn btn-save" onclick="saveTodo()">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 通知 -->
+    <div class="notification" id="notification">
+        <div class="notification-title" id="notificationTitle">提醒</div>
+        <div class="notification-message" id="notificationMessage">待办事项提醒</div>
+    </div>
+
+    <script>
+        // 示例数据
+        let todos = [
+            {
+                id: 1,
+                title: '完成项目报告',
+                description: '需要包含本周的工作总结',
+                time: '09:00',
+                cycle: 'DAILY',
+                dayOfWeek: null,
+                dayOfMonth: null,
+                enabled: true
+            },
+            {
+                id: 2,
+                title: '团队会议',
+                description: '讨论下周的计划',
+                time: '14:30',
+                cycle: 'WEEKLY',
+                dayOfWeek: 1,
+                dayOfMonth: null,
+                enabled: true
+            },
+            {
+                id: 3,
+                title: '提交月度报告',
+                description: '需要财务数据支持',
+                time: '17:00',
+                cycle: 'MONTHLY',
+                dayOfWeek: null,
+                dayOfMonth: 15,
+                enabled: false
+            }
+        ];
+
+        let editingTodoId = null;
+        let selectedDayOfWeek = 1;
+        let selectedDayOfMonth = 1;
+
+        // 渲染待办事项列表
+        function renderTodos() {
+            const todoList = document.getElementById('todoList');
+            
+            if (todos.length === 0) {
+                todoList.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📋</div>
+                        <div class="empty-state-text">
+                            暂无待办事项<br>
+                            点击 + 添加新的待办事项
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            todoList.innerHTML = todos.map(todo => `
+                <div class="todo-item ${!todo.enabled ? 'disabled' : ''}">
+                    <div class="todo-header">
+                        <div class="todo-checkbox ${!todo.enabled ? 'checked' : ''}" 
+                             onclick="toggleTodo(${todo.id})"></div>
+                        <div class="todo-content">
+                            <div class="todo-title">${todo.title}</div>
+                            ${todo.description ? `<div class="todo-description">${todo.description}</div>` : ''}
+                        </div>
+                        <div class="todo-actions">
+                            <button class="todo-action-btn" onclick="editTodo(${todo.id})">✏️</button>
+                            <button class="todo-action-btn" onclick="deleteTodo(${todo.id})">🗑️</button>
+                        </div>
+                    </div>
+                    <div class="todo-meta">
+                        <span>🕐 ${todo.time}</span>
+                        <span>${getCycleText(todo)}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // 获取周期文本
+        function getCycleText(todo) {
+            const cycleMap = {
+                'NONE': '仅一次',
+                'DAILY': '每天',
+                'WEEKLY': `每周${getDayOfWeekText(todo.dayOfWeek || 1)}`,
+                'MONTHLY': `每月${todo.dayOfMonth || 1}日`
+            };
+            return cycleMap[todo.cycle] || '仅一次';
+        }
+
+        function getDayOfWeekText(dayOfWeek) {
+            const dayMap = {
+                1: '一',
+                2: '二',
+                3: '三',
+                4: '四',
+                5: '五',
+                6: '六',
+                7: '日'
+            };
+            return dayMap[dayOfWeek] || '一';
+        }
+
+        // 周期改变事件
+        function onCycleChange() {
+            const cycle = document.getElementById('todoCycle').value;
+            const dayOfWeekGroup = document.getElementById('dayOfWeekGroup');
+            const dayOfMonthGroup = document.getElementById('dayOfMonthGroup');
+
+            dayOfWeekGroup.style.display = cycle === 'WEEKLY' ? 'block' : 'none';
+            dayOfMonthGroup.style.display = cycle === 'MONTHLY' ? 'block' : 'none';
+        }
+
+        // 选择星期
+        function selectDayOfWeek(day) {
+            selectedDayOfWeek = day;
+            document.querySelectorAll('#dayOfWeekSelector .day-chip').forEach(chip => {
+                chip.classList.remove('selected');
+                if (parseInt(chip.dataset.day) === day) {
+                    chip.classList.add('selected');
+                }
+            });
+        }
+
+        // 选择日期
+        function selectDayOfMonth(day) {
+            selectedDayOfMonth = day;
+            document.querySelectorAll('#dayOfMonthSelector .day-chip').forEach(chip => {
+                chip.classList.remove('selected');
+                if (parseInt(chip.dataset.day) === day) {
+                    chip.classList.add('selected');
+                }
+            });
+        }
+
+        // 初始化日期选择器
+        function initDayOfMonthSelector() {
+            const selector = document.getElementById('dayOfMonthSelector');
+            selector.innerHTML = '';
+            for (let i = 1; i <= 31; i++) {
+                const chip = document.createElement('div');
+                chip.className = 'day-chip';
+                chip.dataset.day = i;
+                chip.textContent = i;
+                chip.onclick = () => selectDayOfMonth(i);
+                selector.appendChild(chip);
+            }
+        }
+
+        // 显示添加模态框
+        function showAddModal() {
+            editingTodoId = null;
+            document.getElementById('modalTitle').textContent = '添加待办事项';
+            document.getElementById('todoTitle').value = '';
+            document.getElementById('todoDescription').value = '';
+            document.getElementById('todoTime').value = '09:00';
+            document.getElementById('todoCycle').value = 'NONE';
+            selectedDayOfWeek = 1;
+            selectedDayOfMonth = 1;
+            selectDayOfWeek(1);
+            selectDayOfMonth(1);
+            onCycleChange();
+            document.getElementById('todoModal').classList.add('show');
+        }
+
+        // 编辑待办事项
+        function editTodo(id) {
+            const todo = todos.find(t => t.id === id);
+            if (!todo) return;
+
+            editingTodoId = id;
+            document.getElementById('modalTitle').textContent = '编辑待办事项';
+            document.getElementById('todoTitle').value = todo.title;
+            document.getElementById('todoDescription').value = todo.description || '';
+            document.getElementById('todoTime').value = todo.time;
+            document.getElementById('todoCycle').value = todo.cycle;
+            selectedDayOfWeek = todo.dayOfWeek || 1;
+            selectedDayOfMonth = todo.dayOfMonth || 1;
+            selectDayOfWeek(selectedDayOfWeek);
+            selectDayOfMonth(selectedDayOfMonth);
+            onCycleChange();
+            document.getElementById('todoModal').classList.add('show');
+        }
+
+        // 隐藏模态框
+        function hideModal() {
+            document.getElementById('todoModal').classList.remove('show');
+            editingTodoId = null;
+        }
+
+        // 保存待办事项
+        function saveTodo() {
+            const title = document.getElementById('todoTitle').value.trim();
+            const description = document.getElementById('todoDescription').value.trim();
+            const time = document.getElementById('todoTime').value;
+            const cycle = document.getElementById('todoCycle').value;
+
+            if (!title) {
+                alert('请输入标题');
+                return;
+            }
+
+            const dayOfWeek = cycle === 'WEEKLY' ? selectedDayOfWeek : null;
+            const dayOfMonth = cycle === 'MONTHLY' ? selectedDayOfMonth : null;
+
+            if (editingTodoId) {
+                // 编辑现有待办事项
+                const todoIndex = todos.findIndex(t => t.id === editingTodoId);
+                if (todoIndex !== -1) {
+                    todos[todoIndex] = {
+                        ...todos[todoIndex],
+                        title,
+                        description,
+                        time,
+                        cycle,
+                        dayOfWeek,
+                        dayOfMonth
+                    };
+                }
+            } else {
+                // 添加新待办事项
+                const newTodo = {
+                    id: Date.now(),
+                    title,
+                    description,
+                    time,
+                    cycle,
+                    dayOfWeek,
+                    dayOfMonth,
+                    enabled: true
+                };
+                todos.push(newTodo);
+            }
+
+            hideModal();
+            renderTodos();
+            showNotification('成功', editingTodoId ? '待办事项已更新' : '待办事项已添加');
+        }
+
+        // 删除待办事项
+        function deleteTodo(id) {
+            if (confirm('确定要删除这个待办事项吗？')) {
+                todos = todos.filter(t => t.id !== id);
+                renderTodos();
+                showNotification('成功', '待办事项已删除');
+            }
+        }
+
+        // 切换待办事项状态
+        function toggleTodo(id) {
+            const todo = todos.find(t => t.id === id);
+            if (todo) {
+                todo.enabled = !todo.enabled;
+                renderTodos();
+                showNotification('成功', todo.enabled ? '待办事项已启用' : '待办事项已禁用');
+            }
+        }
+
+        // 显示通知
+        function showNotification(title, message) {
+            const notification = document.getElementById('notification');
+            document.getElementById('notificationTitle').textContent = title;
+            document.getElementById('notificationMessage').textContent = message;
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+
+        // 模拟提醒通知
+        function simulateReminder() {
+            const enabledTodos = todos.filter(t => t.enabled);
+            if (enabledTodos.length > 0) {
+                const randomTodo = enabledTodos[Math.floor(Math.random() * enabledTodos.length)];
+                showNotification('⏰ 提醒', `是时候完成"${randomTodo.title}"了！`);
+            }
+        }
+
+        // 每30秒模拟一次提醒
+        setInterval(simulateReminder, 30000);
+
+        // 初始化
+        initDayOfMonthSelector();
+        renderTodos();
+    </script>
+</body>
+</html>
