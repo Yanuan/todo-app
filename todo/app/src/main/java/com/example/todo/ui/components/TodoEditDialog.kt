@@ -250,6 +250,7 @@ private fun getDayOfWeekText(dayOfWeek: Int): String {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DayOfWeekPickerDialog(
     selectedDay: Int,
@@ -282,6 +283,7 @@ fun DayOfWeekPickerDialog(
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DayOfMonthPickerDialog(
     selectedDay: Int,
